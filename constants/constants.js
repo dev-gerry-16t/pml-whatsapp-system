@@ -1,5 +1,5 @@
 const GLOBAL_CONSTANTS = {
-  VERSION: "v0.0.1",
+  VERSION: "v0.0.2",
   OFFSET: process.env.OFFSET,
   PROTOCOL_AMQP: process.env.PROTOCOL_AMQP,
   USERNAME_AMQP: process.env.USERNAME_AMQP,
