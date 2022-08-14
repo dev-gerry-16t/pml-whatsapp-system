@@ -1,7 +1,8 @@
+import Rascal from "rascal";
 import "dotenv/config";
 import sql from "mssql";
 import AWS from "aws-sdk";
-import Channel from "./subscriberExchange/subscriber.js";
+import config from "./config/configQueue.js";
 import CONFIG from "./database/configDb.js";
 import GLOBAL_CONSTANTS from "./constants/constants.js";
 import isEmpty from "lodash/isEmpty.js";
@@ -11,11 +12,11 @@ import Axios from "axios";
 import createBearerToken from "./actions/createBearerToken.js";
 import stream from "stream";
 
+const { BrokerAsPromised: Broker } = Rascal;
 const s3 = new AWS.S3({
   accessKeyId: GLOBAL_CONSTANTS.AWS_S3_ACCESS_KEY_ID,
   secretAccessKey: GLOBAL_CONSTANTS.AWS_S3_SECRET_ACCESS_KEY,
 });
-const queueReceive = GLOBAL_CONSTANTS.QUEUE_NAME;
 
 const executeSetMessage = async (params) => {
   const {
@@ -50,7 +51,7 @@ const executeMessageMarkAsRead = async (params) => {
   const { method, endpoint, body, token } = params;
   try {
     const bodyParse = JSON.parse(body);
-    const response = await RequestPromise({
+    await RequestPromise({
       url: endpoint,
       method: method,
       headers: {
@@ -61,9 +62,7 @@ const executeMessageMarkAsRead = async (params) => {
       body: bodyParse,
       rejectUnauthorized: false,
     });
-  } catch (error) {
-    throw error;
-  }
+  } catch (error) {}
 };
 
 const executeMessageOutGoing = async (params) => {
@@ -254,16 +253,16 @@ const executeSetWSWebhook = async (params) => {
       throw `Error en el servicio ${resultObject.stateCode}`;
     } else {
       if (isEmpty(resultRecordSets) === false) {
-        for (const element of messagesInSee) {
-          if (isNil(element.endpoint) === false) {
-            await executeMessageMarkAsRead(element);
-          }
-        }
         for (const element of messagesDocuments) {
           if (element.mustBeDeleted === true) {
             await executeDeleteFile(element);
           } else {
             await executeUploadFile(element);
+          }
+        }
+        for (const element of messagesInSee) {
+          if (isNil(element.endpoint) === false) {
+            await executeMessageMarkAsRead(element);
           }
         }
         for (const element of messagesToSend) {
@@ -276,6 +275,7 @@ const executeSetWSWebhook = async (params) => {
     await transaction.commit();
   } catch (error) {
     open && (await transaction.rollback());
+    throw error;
   }
 };
 
@@ -285,17 +285,21 @@ sql.connect(CONFIG, async (error, res) => {
   }
   if (res) {
     try {
-      const channel = await Channel();
-
-      channel.consume(queueReceive, async (message) => {
-        const content = message.content.toString();
-        try {
-          await executeSetWSWebhook({ jsonServiceResponse: content });
-          channel.ack(message);
-        } catch (error) {
-          channel.ack(message);
-        }
-      });
+      const broker = await Broker.create(config);
+      broker.on("error", console.error);
+      broker.on("close", console.error);
+      const subscription = await broker.subscribe("fromWhatsApp");
+      subscription
+        .on("message", async (message, content, ackOrNack) => {
+          try {
+            const contentString = JSON.stringify(content);
+            await executeSetWSWebhook({ jsonServiceResponse: contentString });
+            ackOrNack(message);
+          } catch (error) {
+            ackOrNack(error, { strategy: "nack" });
+          }
+        })
+        .on("error", console.error);
     } catch (error) {
       console.log("error", error);
     }

@@ -1,6 +1,6 @@
 {
   "name": "pml-whatsapp-system",
-  "version": "v0.0.1",
+  "version": "v0.0.2",
   "description": "",
   "main": "index.js",
   "type": "module",
@@ -21,6 +21,7 @@
     "lodash": "^4.17.20",
     "moment": "^2.29.3",
     "mssql": "^6.2.3",
+    "rascal": "^14.4.5",
     "request": "^2.88.2",
     "request-promise": "^4.2.6"
   },
