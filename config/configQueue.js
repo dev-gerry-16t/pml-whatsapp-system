@@ -33,17 +33,6 @@ const jsonConfig = {
           assert: true,
         },
       },
-      exchanges: {
-        [exchangeWhatsApp]: configExchange,
-      },
-      bindings: {
-        bindingWhatsApp: {
-          source: exchangeWhatsApp,
-          destination: queue,
-          destinationType: "queue",
-          bindingKey: routingKeyWhatsApp,
-        },
-      },
       subscriptions: {
         fromWhatsApp: {
           vhost: "/",
