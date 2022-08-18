@@ -286,6 +286,7 @@ sql.connect(CONFIG, async (error, res) => {
   if (res) {
     try {
       const broker = await Broker.create(config);
+      console.log("broker", JSON.stringify(broker));
       broker.on("error", console.error);
       broker.on("close", console.error);
       const subscription = await broker.subscribe("fromWhatsApp");
