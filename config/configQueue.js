@@ -29,9 +29,7 @@ const jsonConfig = {
         },
       },
       queues: {
-        [queue]: {
-          assert: true,
-        },
+        [queue]: {},
       },
       subscriptions: {
         fromWhatsApp: {
