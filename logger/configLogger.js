@@ -38,6 +38,6 @@ const config = {
   formatLog: (item) => `${item.level}: ${item.message}`,
 };
 
-if (NODE_ENV != "LOCAL") logger.add(new CloudWatchTransport(config));
+if (NODE_ENV !== "LOCAL") logger.add(new CloudWatchTransport(config));
 
 export default logger;
