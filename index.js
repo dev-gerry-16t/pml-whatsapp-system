@@ -11,6 +11,7 @@ import RequestPromise from "request-promise";
 import Axios from "axios";
 import createBearerToken from "./actions/createBearerToken.js";
 import stream from "stream";
+import LoggerSystem from "./logger/loggerSystem.js";
 
 const { BrokerAsPromised: Broker } = Rascal;
 const s3 = new AWS.S3({
@@ -62,7 +63,11 @@ const executeMessageMarkAsRead = async (params) => {
       body: bodyParse,
       rejectUnauthorized: false,
     });
-  } catch (error) {}
+  } catch (error) {
+    LoggerSystem("executeMessageMarkAsReadr", params, {}, error, {
+      container: "pml-whatsapp-system",
+    }).error();
+  }
 };
 
 const executeMessageOutGoing = async (params) => {
@@ -281,14 +286,35 @@ const executeSetWSWebhook = async (params) => {
 
 sql.connect(CONFIG, async (error, res) => {
   if (error) {
-    console.log("error", error);
+    LoggerSystem("connect database", CONFIG, {}, error, {
+      container: "pml-whatsapp-system",
+    }).error();
   }
   if (res) {
-    console.log("ok");
+    LoggerSystem("Success connect database", {}, {}, {}, {}).info();
     try {
       const broker = await Broker.create(config);
-      broker.on("error", console.error);
-      broker.on("close", console.error);
+      broker.on("error", (error) => {
+        LoggerSystem("broker error event", config, {}, error, {
+          container: "pml-whatsapp-system",
+          event: "boker.on(error)",
+        }).error();
+      });
+      broker.on("vhost_initialised", ({ vhost, connectionUrl }) => {
+        LoggerSystem(
+          "broker.on vhost_initialised",
+          {},
+          { vhost, connectionUrl },
+          {},
+          {}
+        ).info();
+      });
+      broker.on("close", (error) => {
+        LoggerSystem("broker close event", {}, {}, error, {
+          container: "pml-whatsapp-system",
+          event: "boker.on(close)",
+        }).warn();
+      });
       const subscription = await broker.subscribe("fromWhatsApp");
       subscription
         .on("message", async (message, content, ackOrNack) => {
@@ -297,12 +323,23 @@ sql.connect(CONFIG, async (error, res) => {
             await executeSetWSWebhook({ jsonServiceResponse: contentString });
             ackOrNack(message);
           } catch (error) {
+            LoggerSystem("subscription message event", content, {}, error, {
+              container: "pml-whatsapp-system",
+              event: "subscription.on(message)",
+            }).warn();
             ackOrNack(error, { strategy: "nack" });
           }
         })
-        .on("error", console.error);
+        .on("error", (error) => {
+          LoggerSystem("subscription message event", {}, {}, error, {
+            container: "pml-whatsapp-system",
+            event: "subscription.on(error)",
+          }).error();
+        });
     } catch (error) {
-      console.log("error catch subscription", error);
+      LoggerSystem("Config broker", config, {}, error, {
+        container: "pml-whatsapp-system",
+      }).error();
     }
   }
 });
