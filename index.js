@@ -283,6 +283,15 @@ const executeSetWSWebhook = async (params) => {
           }
         }
         if (isEmpty(emailSend) === false) {
+          LoggerSystem(
+            "5to set",
+            {},
+            emailSend,
+            {},
+            {
+              container: "pml-whatsapp-system",
+            }
+          ).info();
           for (const element of emailSend) {
             if (element.canSendEmail === true) {
               let arrayPushVar = [];
