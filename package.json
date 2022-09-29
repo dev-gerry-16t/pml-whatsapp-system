@@ -21,6 +21,8 @@
     "lodash": "^4.17.20",
     "moment": "^2.29.3",
     "mssql": "^6.2.3",
+    "nodemailer": "^6.7.5",
+    "nodemailer-mandrill-transport": "^1.2.0",
     "rascal": "^14.4.5",
     "request": "^2.88.2",
     "request-promise": "^4.2.6",

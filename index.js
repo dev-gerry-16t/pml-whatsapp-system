@@ -12,6 +12,7 @@ import Axios from "axios";
 import createBearerToken from "./actions/createBearerToken.js";
 import stream from "stream";
 import LoggerSystem from "./logger/loggerSystem.js";
+import executeMailTo from "./actions/sendInformationUser.js";
 
 const { BrokerAsPromised: Broker } = Rascal;
 const s3 = new AWS.S3({
@@ -254,6 +255,12 @@ const executeSetWSWebhook = async (params) => {
       isEmpty(resultRecordSets[3]) === false
         ? resultRecordSets[3]
         : [];
+    const emailSend =
+      isEmpty(resultRecordSets) === false &&
+      isNil(resultRecordSets[4]) === false &&
+      isEmpty(resultRecordSets[4]) === false
+        ? resultRecordSets[4]
+        : [];
     if (isEmpty(resultObject) === false && resultObject.stateCode !== 200) {
       throw `Error en el servicio ${resultObject.stateCode}`;
     } else {
@@ -273,6 +280,30 @@ const executeSetWSWebhook = async (params) => {
         for (const element of messagesToSend) {
           if (isNil(element.endpoint) === false) {
             await executeMessageOutGoing(element);
+          }
+        }
+        if (isEmpty(emailSend) === false) {
+          for (const element of emailSend) {
+            if (element.canSendEmail === true) {
+              let arrayPushVar = [];
+              if (element.hasToken === true) {
+                const tokenApp = await createBearerToken({
+                  idSystemUser: element.idSystemUser,
+                  idLoginHistory: element.idLoginHistory,
+                  tokenExpiration: element.expireIn,
+                });
+                arrayPushVar = [
+                  {
+                    name: "nvcToken",
+                    content: tokenApp,
+                  },
+                ];
+              }
+              await executeMailTo({
+                ...element,
+                pushVar: arrayPushVar,
+              });
+            }
           }
         }
       }

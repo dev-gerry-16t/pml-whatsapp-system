@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken";
 import GLOBAL_CONSTANTS from "../constants/constants.js";
+import LoggerSystem from "../logger/loggerSystem.js";
 
 const createBearerToken = async (params) => {
   const { idSystemUser, idLoginHistory, tokenExpiration } = params;
@@ -14,7 +15,9 @@ const createBearerToken = async (params) => {
 
     return token;
   } catch (error) {
-    throw error;
+    LoggerSystem("executeMessageMarkAsReadr", params, {}, error, {
+      container: "pml-whatsapp-system",
+    }).error();
   }
 };
 

@@ -19,6 +19,7 @@ const GLOBAL_CONSTANTS = {
   AWS_S3_SECRET_ACCESS_KEY: process.env.AWS_S3_SECRET_ACCESS_KEY,
   STREAM_LOG: process.env.STREAM_LOG,
   NODE_ENV: process.env.NODE_ENV,
+  KEY_MANDRILL: process.env.KEY_MANDRILL,
 };
 
 export default GLOBAL_CONSTANTS;
