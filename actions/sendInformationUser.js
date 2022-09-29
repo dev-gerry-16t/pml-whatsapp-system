@@ -3,7 +3,7 @@ import isEmpty from "lodash/isEmpty.js";
 import isNil from "lodash/isNil.js";
 import GLOBAL_CONSTANTS from "../constants/constants.js";
 import smtpTransporter from "./smtpTransport.js";
-import LoggerSystem from "./logger/loggerSystem.js";
+import LoggerSystem from "../logger/loggerSystem.js";
 
 const executeEmailSentAES = async (params) => {
   const {

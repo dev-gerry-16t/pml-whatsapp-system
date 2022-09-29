@@ -15,7 +15,7 @@ const createBearerToken = async (params) => {
 
     return token;
   } catch (error) {
-    LoggerSystem("executeMessageMarkAsReadr", params, {}, error, {
+    LoggerSystem("createBearerToken", params, {}, error, {
       container: "pml-whatsapp-system",
     }).error();
   }
